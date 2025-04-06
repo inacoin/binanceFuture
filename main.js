@@ -64,14 +64,16 @@ function connectWebSocket() {
     try {
       const parsedData = JSON.parse(data);
       if (Array.isArray(parsedData)) {
+        // Menangani data ticker (array)
         parsedData.forEach(ticker => {
           if (ticker.s) {
             priceData.set(ticker.s, parseFloat(ticker.c));
             volumeData.set(ticker.s, parseFloat(ticker.v));
           }
         });
-      } else if (parsedData.b && parsedData.a) {
-        orderBookData.set(ticker.s, {
+      } else if (parsedData.s && parsedData.b && parsedData.a) {
+        // Menangani data order book (objek tunggal)
+        orderBookData.set(parsedData.s, {
           bid: parseFloat(parsedData.b),
           ask: parseFloat(parsedData.a),
           timestamp: Date.now()
@@ -138,8 +140,8 @@ function loadUserApiKeys() {
     const keys = JSON.parse(data);
     for (const chatId in keys) {
       userApiKeys[chatId] = {
-        apiKey: keys[chatId].apiKey, // Tanpa dekripsi
-        secretKey: keys[chatId].secretKey // Tanpa dekripsi
+        apiKey: keys[chatId].apiKey,
+        secretKey: keys[chatId].secretKey
       };
       userSettings[chatId] = { ...DEFAULT_SETTINGS };
       performanceHistory[chatId] = [];
@@ -148,7 +150,7 @@ function loadUserApiKeys() {
 }
 
 function saveUserApiKeys() {
-  fs.writeFileSync(userKeysFile, JSON.stringify(userApiKeys, null, 2)); // Simpan tanpa enkripsi
+  fs.writeFileSync(userKeysFile, JSON.stringify(userApiKeys, null, 2));
 }
 
 loadUserApiKeys();
@@ -178,7 +180,7 @@ async function apiRequest(method, url, apiKey, secretKey, params = {}) {
   apiRateLimits.set(rateKey, limit);
 
   const timestamp = Date.now();
-  const queryString = Object.keys(params).map(k => `${k}=${params[k]}`).join('&') + `&timestamp=${timestamp}`;
+  const queryString = Object.keys(params).map(k => `${k}=${params[k]}`).join('&') + `×tamp=${timestamp}`;
   const signature = crypto.createHmac('sha256', secretKey).update(queryString).digest('hex');
   const fullUrl = `${url}?${queryString}&signature=${signature}`;
 
